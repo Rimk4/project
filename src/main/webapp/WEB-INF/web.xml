@@ -5,7 +5,7 @@
  
     <servlet>
         <servlet-name>ServletName</servlet-name>
-        <servlet-class>servlet.HelloServlet</servlet-class>
+        <servlet-class>servlet.VkAppWeb</servlet-class>
     </servlet>
     
     <servlet-mapping>
