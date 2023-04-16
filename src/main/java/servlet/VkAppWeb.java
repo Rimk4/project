@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class VkAppWeb extends HttpServlet {
 
-private static User user;
+    private static User user;
     private static String token;
 
     @Override
@@ -226,7 +226,7 @@ private static User user;
         commons = (u.getSchool().equals("не указано")) ? "" : ("<li class=\"sub2\"><a href=\"#\">По школе("+schoolcount.toString()+")</a><ul>"+commons+"</ul></li>");
 
 
-System.out.println(List.of(commong, commonc, commonw, commonu, commons));
+        System.out.println(List.of(commong, commonc, commonw, commonu, commons));
         return List.of(commong, commonc, commonw, commonu, commons);
     }
 
