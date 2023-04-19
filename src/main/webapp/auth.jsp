@@ -32,6 +32,7 @@
 </head>
 <body>
 
+<p>
   <form method="post" action="app?action=signin">
     Your Name:<input type="text" name="username">
     Password:<input type="text" name="pass">
@@ -39,14 +40,19 @@
       Войти
     </button>
   </form>
+</p>
+  
   <br>
   <br>
-  <form method="post" action="app?action=signup">
+  <p>
+    <form method="post" action="app?action=signup">
     Your Name:<input type="text" name="username">
     Password:<input type="text" name="pass">
     <button type="submit" class="btn_type2">
       Зарегистрироваться
     </button>
   </form>
+  </p>
+  
 </body>
 </html>
