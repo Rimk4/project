@@ -12,7 +12,7 @@
       font-family: sans-serif;
     }
     input[type=number] {
-      background-color: #222c42;
+      background-color: #313c57;
       color: white;
     }
   </style>
@@ -27,14 +27,12 @@
       user-select: none;
       position: relative;
       border-radius: 4px;
-      background-color: #1b263d;
+      background-color: #25365e;
     }
-    .button:hover {
-      background-color: #222c42;
-    }
+    .button:hover,
     .button:active,
     .button:focus {
-      background-color: #222c42;
+      background-color: #313c57;
     }
     .button::before {
       left: 0;
@@ -63,7 +61,7 @@
       position: absolute;
       transition: opacity 0.5s;
       border-radius: 4px;
-      background-color: #1b263d;
+      background-color: #25365e;
     }
     .button-controller {
       display: none;
@@ -133,25 +131,43 @@
         transform: rotate(359deg);
       }
     }
+    .btn_type2 {
+      color: #fff;
+      cursor: pointer;
+      padding: 0.4rem 2rem;
+      user-select: none;
+      position: relative;
+      border-radius: 4px;
+      border: 2px solid #313c57;
+      background-color: #25365e;
+    }
+    .btn_type2:hover,
+    .btn_type2:active,
+    .btn_type2:focus {
+      background-color: #313c57;
+    }
   </style>
 </head>
 <body>
-  <form align="center" id="form" method="post" action="app?action=submit" onkeydown="if(event.keyCode == 13) event.preventDefault();">
+  <form align="center" id="form" method="post" action="app?action=submit" onkeydown="if (event.keyCode == 13) event.preventDefault();">
     ID:&nbsp;<input type="number" name="id" value="${user.id}" placeholder="${user.id}"/>
-    <p></p>
+    <br>
+    <br>
     <input class="button-controller" id="button" type="checkbox" onclick="document.querySelector('#warn').style='initial';document.querySelector('#form').submit();">
 
     <label tabindex="0" for="button" class="button">
       Начать
     </label>
-    <!--<button type="checkbox" onclick="document.querySelector('#warn').style='initial';">Начать</button>-->
     <div id="warn" style="display:none">
-      <br>
       <br>
       <br>
       Подождите немного пока данные загружаются!
       <br>Это может занять несколько минут
     </div>
+  </form>
+  <br>
+  <form method="post" action="app?action=history">
+    <center><button type="submit" class="btn_type2">История</button></center>
   </form>
 </body>
 </html>
