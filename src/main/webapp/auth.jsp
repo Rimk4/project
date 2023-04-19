@@ -28,10 +28,17 @@
       background-color: #172135;
       font-family: sans-serif;
     }
+
+    .box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 	</style>
 </head>
 <body>
 
+<div class="box">
   <div  style="margin-bottom: 2em;">
     <form method="post" action="app?action=signin">
       Your Name:<input type="text" name="username">
@@ -53,6 +60,8 @@
         </button>
       </form>
   </div>
+</div>
+  
   
 </body>
 </html>
