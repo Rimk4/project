@@ -32,15 +32,15 @@
 </head>
 <body>
 
-<p>
-  <form method="post" action="app?action=signin">
-    Your Name:<input type="text" name="username">
-    Password:<input type="text" name="pass">
-    <button type="submit" class="btn_type2">
-      Войти
-    </button>
-  </form>
-</p>
+  <p style="margin-bottom: 2em;">
+    <form method="post" action="app?action=signin">
+      Your Name:<input type="text" name="username">
+      Password:<input type="text" name="pass">
+      <button type="submit" class="btn_type2">
+        Войти
+      </button>
+    </form>
+  </p>
   
   <br>
   <br>
