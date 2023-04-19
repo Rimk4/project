@@ -1,6 +1,6 @@
 <web-app>
   	<welcome-file-list>
-        <welcome-file>update.jsp</welcome-file>
+        <welcome-file>auth.jsp</welcome-file>
     </welcome-file-list>
  
     <servlet>
