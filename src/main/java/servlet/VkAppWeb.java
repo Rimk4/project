@@ -43,6 +43,8 @@ public class VkAppWeb extends HttpServlet {
 
     private static User user;
     private static String token;
+    private static List<User> userlist;
+    private static Database database;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -50,33 +52,34 @@ public class VkAppWeb extends HttpServlet {
 
         user = new User("не указано", 0);
         token = "21d0273e21d0273e21d0273e7622c31bc5221d021d0273e45cf71ee1461612f7bde0402";
+        userlist = new ArrayList<User>();
+
+        database = new Database();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("Enter doGet");
+        //System.out.println("Enter doGet");
 
         String action = request.getParameter("action");
         request.setAttribute("user", user);
-        request.setAttribute("token", token);
 
-        if (action == null)
-            request.getRequestDispatcher("/person.jsp").forward(request, response);
-        else if ("update".equals(action))
-                request.getRequestDispatcher("/update.jsp").forward(request, response);
+        if ("update".equals(action))
+            request.getRequestDispatcher("/update.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("Enter doPost");
+        //System.out.println("Enter doPost");
 
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-
+        
         if ("submit".equals(action)) {
             Integer id = 0;
             try {
                 id = (request.getParameter("id").equals("") ? 0 : Integer.parseInt(request.getParameter("id")));
+                System.out.println(id);
             } catch (java.lang.NumberFormatException e) {
                 e.printStackTrace();
             }
@@ -84,25 +87,126 @@ public class VkAppWeb extends HttpServlet {
             setProfile(user);
             user.setFriends(getFriends(user.getId()));
             user.setGroups(getGroups(user.getId()));
+            
+            request.setAttribute("user", user);
+            userlist.add(user);
+            System.out.println(userlist);
+            
+            try {
+                List<String> commons = getCommon(user);
+                request.setAttribute("commongroups", commons.get(0));
+                request.setAttribute("commoncity", commons.get(1));
+                request.setAttribute("commonwork", commons.get(2));
+                request.setAttribute("commonuniversity", commons.get(3));
+                request.setAttribute("commonschool", commons.get(4));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            request.setAttribute("groups", user.getGroups().stream().map(g -> "<li class=\"sub2\"><a href=\"https://vk.com/"+g.getDomain()+"\">"+g.getName()+"</a></li>").collect(Collectors.joining("")));
+            request.setAttribute("friends", user.getFriends().stream().map(f -> "<li class=\"sub2\"><a href=\"https://vk.com/id"+f.getId()+"\">"+f.getName()+"</a>&nbsp;id:"+f.getId()+"</li>").collect(Collectors.joining("")));
+            request.setAttribute("gcount", user.getGroups().size());
+            request.setAttribute("fcount", user.getFriends().size());
+
+            
+            if (!userlist.isEmpty()) {
+                String data = getUserData(user);
+                System.out.println(data);
+                request.setAttribute("data", data);
+            }
+            else
+                request.setAttribute("data", "");
+
+            request.getRequestDispatcher("/person.jsp").forward(request, response);
         }
-        request.setAttribute("user", user);
-        
-        try {
-            List<String> commons = getCommon(user);
-            request.setAttribute("commongroups", commons.get(0));
-            request.setAttribute("commoncity", commons.get(1));
-            request.setAttribute("commonwork", commons.get(2));
-            request.setAttribute("commonuniversity", commons.get(3));
-            request.setAttribute("commonschool", commons.get(4));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        else if ("history".equals(action)) {
+            request.setAttribute("userlist", userlist.stream().map(u -> "<li><a href=\"https://vk.com/id"+u.getId()+"\">"+u.getName()+"</a>&nbsp;id:"+u.getId()+"</li>").collect(Collectors.joining("")));
+            request.getRequestDispatcher("/history.jsp").forward(request, response);
+        }
+        else if ("signin".equals(action)) {
+            String authname = request.getParameter("username");
+            String authpass = request.getParameter("pass");
+
+            System.out.println(authname);
+            System.out.println(authpass);
+
+            if (database.authenticate(authname, authpass)) {
+                System.out.println("Authentication successful.");
+            } else {
+                System.out.println("Authentication failed.");
+            }
+
+            request.getRequestDispatcher("/update.jsp").forward(request, response);
+        }
+        else if ("signup".equals(action)) {
+            String authname = request.getParameter("username");
+            String authpass = request.getParameter("pass");
+
+            System.out.println(authname);
+            System.out.println(authpass);
+
+            database.addUser(authname, authpass);
+
+            System.out.println("User added successfully.");
+            request.getRequestDispatcher("/update.jsp").forward(request, response);
+        }
+        else if ("update".equals(action)) {
+            request.getRequestDispatcher("/update.jsp").forward(request, response);
+        }
+        else if ("updateclear".equals(action)) {
+            userlist = new ArrayList<User>();
+            request.getRequestDispatcher("/update.jsp").forward(request, response);
+        }
+    }
+
+    String getUserData(User u) {
+        String data = "id,name,city,work,university,school,type,groups,friends\n";
+
+        data += u.getId().toString() + "," +
+                u.getName() + "," +
+                u.getCity() + "," +
+                u.getWork() + "," +
+                u.getUniversity() + "," +
+                u.getSchool() + "," +
+                u.getType() + ",";
+
+        List<User> friendsStorage = u.getFriends();
+        List<Group> groupStorage = u.getGroups();
+
+        if (friendsStorage.isEmpty() && !groupStorage.isEmpty()) {
+            Group g = groupStorage.remove(groupStorage.size() - 1);
+            data += g.getName() + "(https://vk.com/"+g.getDomain() + "),\n";
+        }
+        else if (!friendsStorage.isEmpty() && groupStorage.isEmpty()) {
+            User f = friendsStorage.remove(friendsStorage.size() - 1);
+            data += "," + f.getName() + "(https://vk.com/id" + f.getId() + ")\n";
+        }
+        else if (friendsStorage.isEmpty() && groupStorage.isEmpty())
+            data += ",,\n";
+        else {
+            Group g = groupStorage.remove(groupStorage.size() - 1);
+            User f = friendsStorage.remove(friendsStorage.size() - 1);
+            data += g.getName() + "(https://vk.com/"+g.getDomain() + ")," + f.getName() + "(https://vk.com/id" + f.getId() + ")\n";
         }
 
-        request.setAttribute("groups", user.getGroups().stream().map(g -> "<li class=\"sub2\"><a href=\"https://vk.com/"+g.getDomain()+"\">"+g.getName()+"</a></li>").collect(Collectors.joining("")));
-        request.setAttribute("friends", user.getFriends().stream().map(f -> "<li class=\"sub2\"><a href=\"https://vk.com/id"+f.getId()+"\">"+f.getName()+"</a></li>").collect(Collectors.joining("")));
-        request.setAttribute("gcount", user.getGroups().size());
-        request.setAttribute("fcount", user.getFriends().size());
-        request.getRequestDispatcher("/person.jsp").forward(request, response);
+        while (!(friendsStorage.isEmpty() || groupStorage.isEmpty())) {
+            Group g = groupStorage.remove(groupStorage.size() - 1);
+            User f = friendsStorage.remove(friendsStorage.size() - 1);
+            data += ",,,,,,," + g.getName() + "(https://vk.com/"+g.getDomain() + ")," + f.getName() + "(https://vk.com/id" + f.getId() + ")\n";
+        }
+
+        if (friendsStorage.isEmpty() && !groupStorage.isEmpty())
+            while (!groupStorage.isEmpty()) {
+                Group g = groupStorage.remove(groupStorage.size() - 1);
+                data += ",,,,,,," + g.getName() + "(https://vk.com/"+g.getDomain() + "),\n";
+            }
+        else if (!friendsStorage.isEmpty() && groupStorage.isEmpty())
+            while (!friendsStorage.isEmpty()) {
+                User f = friendsStorage.remove(friendsStorage.size() - 1);
+                data += ",,,,,,,," + f.getName() + "(https://vk.com/id" + f.getId() + ")\n";
+            }
+
+        return data;
     }
 
     void setProfile(User u){
@@ -136,7 +240,7 @@ public class VkAppWeb extends HttpServlet {
                 }
 
                 if (person.containsKey("schools")) {
-                    System.out.println(person.get("schools"));
+                    //System.out.println(person.get("schools"));
                     JSONArray schools = (JSONArray) person.get("schools");
                     if (schools.size() > 0) {
                         JSONObject school = (JSONObject) schools.get(0);
@@ -217,7 +321,7 @@ public class VkAppWeb extends HttpServlet {
             Thread.sleep(180);
         }
 
-        System.out.println(u.getWork().equals("не указано") ? "" : ("<li><a href=\"#\">По работе("+workcount.toString()+")</a><ul>"+commonw+"</ul></li>"));
+        //System.out.println(u.getWork().equals("не указано") ? "" : ("<li><a href=\"#\">По работе("+workcount.toString()+")</a><ul>"+commonw+"</ul></li>"));
 
         commong = (groupscount == 0) ? "" : ("<li class=\"sub2\"><a href=\"#\">По группам("+groupscount.toString()+")</a><ul>"+commong+"</ul></li>");
         commonc = (u.getCity().equals("не указано")) ? "" : ("<li class=\"sub2\"><a href=\"#\">По городу("+citycount.toString()+")</a><ul>"+commonc+"</ul></li>");
@@ -226,7 +330,7 @@ public class VkAppWeb extends HttpServlet {
         commons = (u.getSchool().equals("не указано")) ? "" : ("<li class=\"sub2\"><a href=\"#\">По школе("+schoolcount.toString()+")</a><ul>"+commons+"</ul></li>");
 
 
-        System.out.println(List.of(commong, commonc, commonw, commonu, commons));
+        //System.out.println(List.of(commong, commonc, commonw, commonu, commons));
         return List.of(commong, commonc, commonw, commonu, commons);
     }
 
@@ -297,14 +401,14 @@ public class VkAppWeb extends HttpServlet {
                 {
                     JSONObject i = (JSONObject) item;
                     User friend = new User((String) i.get("first_name") + " " + (String) i.get("last_name"), (int) (long) i.get("id"));
-                    System.out.println(friend.getName());
+                    //System.out.println(friend.getName());
                     if (i.containsKey("city")) {
                         JSONObject city = (JSONObject) i.get("city");
                         friend.setCity((String) city.get("title"));
                     }
 
                     if (i.containsKey("university")) {
-                        System.out.println(i.get("university"));
+                        //System.out.println(i.get("university"));
                         if (!i.get("university").toString().equals("0"))
                             friend.setUniversity(i.get("university_name").toString());
                     }
